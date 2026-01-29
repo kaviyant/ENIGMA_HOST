@@ -88,7 +88,7 @@ export async function POST(req: Request) {
             if (!questionText) continue;
 
             // Anti-Cheat / idiot check: If user just copies the question text as the answer, score 0.
-            if (val.trim() === questionText.trim()) {
+            if (String(val).trim() === String(questionText).trim()) {
                 results[qid] = { score: 0, reason: "Copied challenge text." };
                 client.questionScores[qid] = 0;
                 continue;

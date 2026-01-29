@@ -29,9 +29,9 @@ export async function GET(req: Request) {
         const activeThreshold = new Date(now.getTime() - 10000); // 10s heartbeat window
 
         // Clients are "active" if lastSeen is recent
-        const activeClients = clients.filter(c => new Date(c.lastSeen) > activeThreshold);
+        const activeClients = clients.filter((c: any) => new Date(c.lastSeen) > activeThreshold);
 
-        const clientsWithStatus = clients.map(c => {
+        const clientsWithStatus = clients.map((c: any) => {
             const isOnline = new Date(c.lastSeen) > activeThreshold;
             return {
                 ...c.toObject(),
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
         // Permanent leaderboard: shows ALL players (online and offline) with their scores
         // This ensures all submitted scores remain visible and permanent in the database
         const leaderboard = clientsWithStatus
-            .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+            .sort((a: any, b: any) => (b.totalScore || 0) - (a.totalScore || 0));
 
         const config = await Round.findOne();
 

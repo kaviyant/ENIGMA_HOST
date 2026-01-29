@@ -19,10 +19,10 @@ export async function GET(req: Request) {
         // All-time leaderboard: shows ALL clients sorted by total score
         // This proves that submissions are permanently stored
         const allTimeLeaderboard = clients
-            .map(c => ({
+            .map((c: any) => ({
                 ...c.toObject(),
             }))
-            .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+            .sort((a: any, b: any) => (b.totalScore || 0) - (a.totalScore || 0));
 
         return NextResponse.json({
             total: allTimeLeaderboard.length,

@@ -17,7 +17,7 @@ function createInstance(name: string, data: any) {
         value: async function () {
             const items = db.get(name);
             const idx = items.findIndex((i: any) => i._id === this._id);
-            
+
             // Create a clean snapshot with all properties
             const snapshot: any = { _id: this._id };
             for (const key in this) {
@@ -37,7 +37,7 @@ function createInstance(name: string, data: any) {
         },
         writable: true, enumerable: false, configurable: true
     });
-    
+
     // Add toObject method
     Object.defineProperty(obj, 'toObject', {
         value: function () {
@@ -51,13 +51,13 @@ function createInstance(name: string, data: any) {
         },
         writable: true, enumerable: false, configurable: true
     });
-    
+
     return obj;
 }
 
 export function createModel(name: string) {
     return {
-        findOne: async (query: any) => {
+        findOne: async (query: any = {}) => {
             const items = db.get(name);
             const found = items.find((i: any) => matches(i, query));
             return found ? createInstance(name, found) : null;
@@ -90,7 +90,7 @@ export function createModel(name: string) {
         findOneAndUpdate: async (query: any, update: any, options: any = {}) => {
             const items = db.get(name);
             const idx = items.findIndex((i: any) => matches(i, query));
-            
+
             if (idx >= 0) {
                 // Apply updates
                 const updated = { ...items[idx], ...update };
@@ -98,7 +98,7 @@ export function createModel(name: string) {
                 db.save(name, items);
                 return options.new ? createInstance(name, updated) : createInstance(name, items[idx]);
             }
-            
+
             return null;
         }
     };

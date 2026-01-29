@@ -1,0 +1,13 @@
+app/api/admin/dashboard/route.ts(32,46): error TS7006: Parameter 'c' implicitly has an 'any' type.
+app/api/admin/dashboard/route.ts(34,47): error TS7006: Parameter 'c' implicitly has an 'any' type.
+app/api/admin/dashboard/route.ts(45,20): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/admin/dashboard/route.ts(45,23): error TS7006: Parameter 'b' implicitly has an 'any' type.
+app/api/admin/dashboard/route.ts(47,36): error TS2554: Expected 1 arguments, but got 0.
+app/api/admin/leaderboard/all-time/route.ts(22,18): error TS7006: Parameter 'c' implicitly has an 'any' type.
+app/api/admin/leaderboard/all-time/route.ts(25,20): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/admin/leaderboard/all-time/route.ts(25,23): error TS7006: Parameter 'b' implicitly has an 'any' type.
+app/api/auth/join/route.ts(11,34): error TS2554: Expected 1 arguments, but got 0.
+app/api/game/status/route.ts(37,36): error TS2554: Expected 1 arguments, but got 0.
+app/api/game/submit/image/route.ts(48,39): error TS2554: Expected 1 arguments, but got 0.
+app/api/game/submit/text/route.ts(49,39): error TS2554: Expected 1 arguments, but got 0.
+app/api/game/submit/text/route.ts(91,21): error TS2339: Property 'trim' does not exist on type '{}'.
