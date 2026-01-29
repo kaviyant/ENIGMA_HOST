@@ -1,0 +1,694 @@
+<link
+    href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet">
+<style>
+    :root {
+        --bg-color: #0a0a0a;
+        --term-green: #33ff00;
+        --term-glow: #33ff00aa;
+        --term-white: #e0e0e0;
+        --term-dim: #444;
+        --font-stack: 'Share Tech Mono', 'Fira Code', monospace;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        scrollbar-width: thin;
+        scrollbar-color: var(--term-green) var(--bg-color);
+    }
+
+    body {
+        background-color: var(--bg-color);
+        color: var(--term-green);
+        font-family: var(--font-stack);
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    /* Scanlines */
+    body::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(to bottom,
+                rgba(255, 255, 255, 0),
+                rgba(255, 255, 255, 0) 50%,
+                rgba(0, 0, 0, 0.1) 50%,
+                rgba(0, 0, 0, 0.1));
+        background-size: 100% 4px;
+        pointer-events: none;
+        z-index: 10;
+    }
+
+    @keyframes flicker {
+        0% {
+            opacity: 0.97;
+        }
+
+        5% {
+            opacity: 0.95;
+        }
+
+        10% {
+            opacity: 0.9;
+        }
+
+        15% {
+            opacity: 0.95;
+        }
+
+        20% {
+            opacity: 0.98;
+        }
+
+        25% {
+            opacity: 0.95;
+        }
+
+        30% {
+            opacity: 0.9;
+        }
+
+        35% {
+            opacity: 0.96;
+        }
+
+        40% {
+            opacity: 0.98;
+        }
+
+        45% {
+            opacity: 0.95;
+        }
+
+        50% {
+            opacity: 0.99;
+        }
+
+        55% {
+            opacity: 0.93;
+        }
+
+        60% {
+            opacity: 0.9;
+        }
+
+        65% {
+            opacity: 0.96;
+        }
+
+        70% {
+            opacity: 1;
+        }
+
+        75% {
+            opacity: 0.97;
+        }
+
+        80% {
+            opacity: 0.95;
+        }
+
+        85% {
+            opacity: 0.92;
+        }
+
+        90% {
+            opacity: 0.95;
+        }
+
+        95% {
+            opacity: 0.99;
+        }
+
+        100% {
+            opacity: 0.94;
+        }
+    }
+
+    .crt-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(18, 16, 16, 0.1);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 11;
+        animation: flicker 0.15s infinite;
+    }
+
+    /* Layout */
+    .app-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 2rem;
+        max-width: 1600px;
+        margin: 0 auto;
+        width: 100%;
+        z-index: 1;
+    }
+
+    header {
+        text-align: center;
+        padding-bottom: 1rem;
+        position: relative;
+    }
+
+    h1 {
+        font-size: 3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.3rem;
+        text-shadow: 0 0 10px var(--term-glow);
+        margin-bottom: 0.5rem;
+    }
+
+    .marquee-container {
+        width: 100%;
+        overflow: hidden;
+        border-bottom: 2px solid var(--term-dim);
+        border-top: 1px solid var(--term-dim);
+        padding: 0.5rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        background: rgba(0, 5, 0, 0.9);
+        box-shadow: inset 0 0 15px #000;
+    }
+
+    .marquee-track {
+        display: flex;
+        gap: 4rem;
+        width: max-content;
+        animation: marquee 30s linear infinite;
+    }
+
+    .marquee-item {
+        color: var(--term-white);
+        font-size: 1rem;
+        letter-spacing: 0.1rem;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        white-space: nowrap;
+    }
+
+    .warning-symbol {
+        color: var(--term-green);
+        font-size: 1.2rem;
+        text-shadow: 0 0 8px var(--term-green);
+        animation: blink-warning 2s infinite;
+    }
+
+    @keyframes marquee {
+        0% {
+            transform: translateX(0);
+        }
+
+        100% {
+            transform: translateX(-50%);
+        }
+    }
+
+    @keyframes blink-warning {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    /* Main Content */
+    .main {
+        display: flex;
+        flex: 1;
+        gap: 2rem;
+        overflow: hidden;
+    }
+
+    .panel {
+        border: 1px solid var(--term-green);
+        background: rgba(0, 20, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        box-shadow: 0 0 15px rgba(51, 255, 0, 0.1);
+        backdrop-filter: blur(2px);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .panel:hover {
+        box-shadow: 0 0 20px rgba(51, 255, 0, 0.2);
+        border-color: #55ff55;
+    }
+
+    /* Image Round Specifics */
+    .image-container {
+        flex: 1.2;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        padding: 1rem;
+    }
+
+    .image-container img {
+        max-width: 100%;
+        max-height: 100%;
+        border: 1px solid var(--term-dim);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .img-overlay {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 1px solid var(--term-green);
+        padding: 5px 10px;
+        color: var(--term-green);
+        font-weight: bold;
+        box-shadow: 0 0 10px black;
+    }
+
+    .input-column {
+        flex: 1;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        /* Wrapper doesn't need panel styles */
+    }
+
+    .input-inner-panel {
+        flex: 1;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--term-green);
+        color: var(--term-green);
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    textarea {
+        width: 100%;
+        flex: 1;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--term-dim);
+        color: var(--term-green);
+        font-family: var(--font-stack);
+        font-size: 1.1rem;
+        resize: none;
+        outline: none;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    textarea:focus {
+        border-color: var(--term-green);
+        box-shadow: 0 0 10px var(--term-glow);
+    }
+
+    .nav-controls {
+        display: flex;
+        gap: 10px;
+        height: 50px;
+    }
+
+    .nav-btns {
+        display: flex;
+        gap: 5px;
+        flex: 1;
+    }
+
+    button {
+        background: transparent;
+        color: var(--term-green);
+        border: 1px solid var(--term-green);
+        font-family: var(--font-stack);
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+    }
+
+    button:hover {
+        background: var(--term-green);
+        color: black;
+        box-shadow: 0 0 15px var(--term-glow);
+    }
+
+    /* Nav Btn specific */
+    .nav-btn {
+        flex: 1;
+    }
+
+    .nav-btn.active {
+        background: var(--term-green);
+        color: black;
+        font-weight: bold;
+        box-shadow: 0 0 10px var(--term-glow);
+    }
+
+    .submit-btn {
+        flex: 2;
+        border-color: var(--term-dim);
+        color: var(--term-dim);
+        pointer-events: none;
+    }
+
+    .submit-btn.enabled {
+        pointer-events: auto;
+        border-color: var(--term-green);
+        color: var(--term-green);
+    }
+
+    .submit-btn.enabled:hover {
+        background: var(--term-green);
+        color: black;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #000;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #225500;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--term-green);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        body {
+            height: auto;
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .main {
+            flex-direction: column;
+        }
+
+        .image-container {
+            height: 40vh;
+            flex: none;
+        }
+
+        .panel {
+            min-height: 300px;
+        }
+    }
+</style>
+
+<div class="crt-overlay"></div>
+
+<div class="app-container">
+    <header>
+        <h1>Enigma</h1>
+    </header>
+
+    <div class="marquee-container">
+        <div class="marquee-track">
+            <!-- Set 1 -->
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <!-- Set 2 -->
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+        </div>
+    </div>
+
+    <div class="main">
+        <!-- Left: Image -->
+        <div class="image-container panel">
+            <img id="displayImage" src="/assets/bg.jpg" alt="SECURE_FEED">
+            <div class="img-overlay">FEED_0<span id="q-indicator">1</span></div>
+        </div>
+
+        <!-- Right: Input -->
+        <div class="input-column">
+            <!-- Note: Input column usually contains multiple items. 
+                 In Round 1, the Right Panel is ONE panel. 
+                 Here, .input-column wraps the header status, textarea, buttons. 
+                 We should probably wrap them in a single .panel styled div? 
+                 Let's keep the .input-column as a wrapper and style the inner panel if needed 
+                 OR make .input-column THE panel. 
+                 Let's make .input-column the panel for consistency. -->
+
+            <div class="panel input-inner-panel">
+                <div class="header-status">
+                    <span>TARGET: ANALYZE_SCENE</span>
+                    <span id="round-timer" style="color:#0f0; text-shadow: 0 0 5px #0f0; font-size: 1.2em;"></span>
+                    <span id="save-status" style="color:#888">UNSAVED</span>
+                </div>
+
+                <textarea id="ta" placeholder="> Input visual analysis parameters..." spellcheck="false"
+                    style="margin-top:1rem; margin-bottom:1rem;"></textarea>
+
+                <!-- Bottom Nav -->
+                <div class="nav-controls">
+                    <div class="nav-btns">
+                        <button class="nav-btn active" onclick="navTo(1)">01</button>
+                        <button class="nav-btn" onclick="navTo(2)">02</button>
+                        <button class="nav-btn" onclick="navTo(3)">03</button>
+                    </div>
+                    <button id="final-submit-btn" class="submit-btn disabled" onclick="submitBatch()"
+                        disabled>AWAIT_COMPLETION</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const user = localStorage.getItem('enigma_user');
+    const pass = localStorage.getItem('enigma_pass');
+    let socket;
+
+    // State
+    const answers = { 1: "", 2: "", 3: "" };
+    let currentQ = 1;
+    let timerInterval;
+    let endTime = null;
+    let config = {
+        q1Img: "/assets/apple.png",
+        q2Img: "/assets/cat.png",
+        q3Img: "/assets/chair.png"
+    };
+
+    if (!user || !pass) {
+        window.location.href = 'lobby.html';
+    } else {
+        socket = io({ autoConnect: false });
+        socket.on('connect', () => {
+            socket.emit('client_join', { username: user, password: pass });
+        });
+
+        socket.on('join_error', () => {
+            window.location.href = 'index.html';
+        });
+
+        socket.on('round_update', (rounds) => {
+            if (rounds.round1) window.location.href = 'txt.html';
+            else if (!rounds.round2) window.location.href = 'lobby.html';
+        });
+
+        socket.on('img_round_config', (newConfig) => {
+            console.log("RX Config:", newConfig);
+            if (newConfig) config = newConfig;
+            loadQ(currentQ);
+        });
+
+        socket.on('img_batch_processed', (results) => {
+            document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center;">
+                    <h1 style="font-size: 3rem; margin-bottom: 20px; animation: glitch 1s infinite;">DATA TRANSMITTED</h1>
+                    <div style="width: 300px; height: 10px; background: #333; overflow: hidden; margin-bottom: 20px;">
+                        <div style="width: 100%; height: 100%; background: var(--term-green); animation: slide 2s ease-out;"></div>
+                    </div>
+                    <p style="font-size: 1.2rem; color: #fff;">ANALYSIS COMPLETE. STANDBY FOR SCORES.</p>
+                </div>
+                <style>
+                    @keyframes glitch {
+                        0% { transform: translate(0) }
+                        20% { transform: translate(-2px, 2px) }
+                        40% { transform: translate(-2px, -2px) }
+                        60% { transform: translate(2px, 2px) }
+                        80% { transform: translate(2px, -2px) }
+                        100% { transform: translate(0) }
+                    }
+                    @keyframes slide {
+                        0% { width: 0% }
+                        100% { width: 100% }
+                    }
+                </style>
+            `;
+        });
+
+        socket.on('admin_warning', (msg) => {
+            const marqueeTrack = document.querySelector('.marquee-track');
+            if (marqueeTrack) {
+                const warningItem = `<div class="marquee-item"><span class="warning-symbol">⚠</span> ${msg}</div>`;
+                marqueeTrack.innerHTML = warningItem.repeat(12);
+            }
+        });
+
+        socket.on('timer_sync', (data) => {
+            console.log("Timer Sync:", data);
+            if (data && data.endTime) {
+                endTime = data.endTime;
+                startTimer();
+            } else {
+                endTime = null;
+                clearInterval(timerInterval);
+                document.getElementById('round-timer').innerText = "";
+            }
+        });
+
+        socket.connect();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        const display = document.getElementById('round-timer');
+
+        function update() {
+            if (!endTime) return;
+            const now = Date.now();
+            const diff = endTime - now;
+
+            if (diff <= 0) {
+                display.innerText = "TIME_EXPIRED";
+                display.style.color = "red";
+                clearInterval(timerInterval);
+                // Optional: Auto-submit or disable input
+                return;
+            }
+
+            const m = Math.floor(diff / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            display.innerText = `T-MINUS: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+
+            // Critical time warning
+            if (diff < 30000) { // Last 30 seconds
+                display.style.color = (diff % 1000 < 500) ? "red" : "#0f0"; // Blink
+            } else {
+                display.style.color = "#0f0";
+            }
+        }
+
+        update();
+        timerInterval = setInterval(update, 1000);
+    }
+
+    function loadQ(qNum) {
+        // Save current first
+        answers[currentQ] = document.getElementById('ta').value;
+
+        currentQ = qNum;
+
+        // Update UI
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-btn')[qNum - 1].classList.add('active');
+
+        document.getElementById('q-indicator').innerText = qNum;
+        document.getElementById('displayImage').src = config[`q${qNum}Img`] || "/assets/error_no_img.png";
+
+        document.getElementById('ta').value = answers[qNum] || "";
+        document.getElementById('ta').focus();
+
+        checkSubmitStatus();
+    }
+
+    function navTo(qNum) {
+        loadQ(qNum);
+    }
+
+    // Auto-save on input
+    document.getElementById('ta').addEventListener('input', () => {
+        answers[currentQ] = document.getElementById('ta').value;
+        document.getElementById('save-status').innerText = "SAVING...";
+        checkSubmitStatus();
+        setTimeout(() => document.getElementById('save-status').innerText = "SAVED", 500);
+    });
+
+    function checkSubmitStatus() {
+        const btn = document.getElementById('final-submit-btn');
+        // Logic: Enable only on Q3? Or if all answered?
+        // Requirement: "submit button in last question"
+
+        if (currentQ === 3) {
+            btn.innerText = "TRANSMIT ALL DATA";
+            const allFilled = answers[1] && answers[2] && answers[3];
+
+            if (allFilled) {
+                btn.classList.add('enabled');
+                btn.classList.remove('disabled');
+                btn.disabled = false;
+            } else {
+                btn.classList.remove('enabled');
+                btn.classList.add('disabled');
+                btn.disabled = true;
+                btn.innerText = "COMPLETE_ALL_FIELDS";
+            }
+        } else {
+            btn.innerText = "NAVIGATE TO Q3 TO SUBMIT";
+            btn.classList.remove('enabled');
+            btn.classList.add('disabled');
+            btn.disabled = true;
+        }
+    }
+
+    function submitBatch() {
+        if (!confirm("Confirm Transmission?\nThis action cannot be undone.")) return;
+
+        const btn = document.getElementById('final-submit-btn');
+        btn.innerText = "TRANSMITTING...";
+        btn.disabled = true;
+
+        socket.emit('submit_img_batch', { answers });
+    }
+</script>
+</body>
+
+</html>

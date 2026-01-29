@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ENIGMA | LOGIN</title>
+    <style>
+        :root {
+            --bg: #051005;
+            --cyan: #33ff00;
+            --purple: #1a8000;
+            --green: #33ff00;
+            --text: #ccffcc;
+            --glass: rgba(5, 20, 5, 0.9);
+            --mono: 'Courier New', monospace;
+            --disp: 'Courier New', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--mono);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bg-grid {
+            position: absolute;
+            inset: 0;
+            width: 200%;
+            height: 200%;
+            background-image: linear-gradient(rgba(51, 255, 0, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(51, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 80px 80px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            animation: grid 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes grid {
+            0% {
+                transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px);
+            }
+
+            100% {
+                transform: perspective(500px) rotateX(60deg) translateY(80px) translateZ(-200px);
+            }
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 6px;
+            z-index: 10;
+        }
+
+        .terminal-window {
+            width: 90%;
+            max-width: 900px;
+            height: 70vh;
+            background: var(--glass);
+            border: 1px solid rgba(51, 255, 0, 0.3);
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(51, 255, 0, 0.1), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            backdrop-filter: blur(10px);
+            z-index: 2;
+            animation: glow 4s infinite alternate;
+            position: relative;
+        }
+
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 20px rgba(51, 255, 0, 0.1);
+                border-color: rgba(51, 255, 0, 0.3);
+            }
+
+            to {
+                box-shadow: 0 0 35px rgba(51, 255, 0, 0.2);
+                border-color: rgba(51, 255, 0, 0.5);
+            }
+        }
+
+        .terminal-header {
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+        }
+
+        .terminal-title {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            font-size: 0.7rem;
+            color: var(--green);
+            background: rgba(0, 255, 102, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 255, 102, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 6px rgba(0, 255, 102, 0);
+            }
+
+            50% {
+                box-shadow: 0 0 0 0 rgba(0, 255, 102, 0.4);
+            }
+        }
+
+        .terminal-body {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--cyan);
+            text-shadow: 0 0 5px rgba(0, 243, 255, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .log-line {
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            animation: fade 0.2s forwards;
+            display: flex;
+        }
+
+        .log-prefix {
+            color: var(--purple);
+            margin-right: 10px;
+        }
+
+        @keyframes fade {
+            to {
+                opacity: 1;
+            }
+        }
+
+        .login-container {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(51, 255, 0, 0.2);
+        }
+
+        .login-input-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .input-label {
+            color: var(--purple);
+            margin-right: 10px;
+            min-width: 100px;
+        }
+
+        .terminal-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--cyan);
+            color: var(--text);
+            font-family: var(--mono);
+            font-size: 1rem;
+            width: 100%;
+            outline: none;
+            padding: 5px;
+        }
+
+        .terminal-input:focus {
+            border-bottom: 2px solid #fff;
+            box-shadow: 0 5px 10px -5px rgba(51, 255, 0, 0.5);
+        }
+
+        .terminal-btn {
+            background: rgba(51, 255, 0, 0.1);
+            border: 1px solid var(--cyan);
+            color: var(--cyan);
+            padding: 10px;
+            font-family: var(--mono);
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .terminal-btn:hover {
+            background: var(--cyan);
+            color: #000;
+            box-shadow: 0 0 20px var(--cyan);
+        }
+
+        .loader-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 1rem 0;
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .loader-bar {
+            height: 100%;
+            background: var(--cyan);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .error-msg {
+            color: #ff5f56;
+            margin-top: 10px;
+            text-shadow: 0 0 5px red;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="scanlines"></div>
+
+    <div class="terminal-window">
+        <div class="terminal-header">
+            <div style="display:flex; gap:8px;">
+                <div style="width:12px;height:12px;border-radius:50%;background:#ff5f56;"></div>
+                <div style="width:12px;height:12px;border-radius:50%;background:#ffbd2e;"></div>
+                <div style="width:12px;height:12px;border-radius:50%;background:#27c93f;"></div>
+            </div>
+            <div class="terminal-title">Enigma_Access_Terminal</div>
+            <div class="status-badge">SECURE BOOT</div>
+        </div>
+
+        <div class="terminal-body" id="console-output">
+            <div id="boot-log"></div>
+            <div class="loader-container" id="boot-loader">
+                <div class="loader-bar" id="boot-bar"></div>
+            </div>
+
+            <!-- Login Form -->
+            <div class="login-container" id="login-form">
+                <div class="log-line">> AUTHENTICATION REQUIRED</div>
+                <div class="login-input-group">
+                    <span class="input-label">USERNAME:</span>
+                    <input type="text" id="username" class="terminal-input" autocomplete="off">
+                </div>
+                <div class="login-input-group">
+                    <span class="input-label">PASSWORD:</span>
+                    <input type="password" id="comp-pass" class="terminal-input">
+                </div>
+                <button class="terminal-btn" onclick="attemptLogin()">INITIALIZE UPLINK</button>
+                <div class="error-msg" id="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const qs = s => document.querySelector(s), ce = t => document.createElement(t);
+        const out = qs('#boot-log'), lb = qs('#boot-loader'), bar = qs('#boot-bar');
+
+        // Boot Sequence
+        // Reduced waiting time slightly for better UX, but keeping the effect
+        const msgs = ["Booting ENIGMA Event Core...", "Loading team environments...", "Initializing challenge modules...", "Syncing Imagers Assets...", "Establishing secure connection...", "Done."];
+        let idx = 0;
+
+        function type(txt, cb) {
+            let l = ce('div'); l.className = 'log-line'; l.innerHTML = `<span class="log-prefix">></span><span>${txt}</span>`; out.appendChild(l);
+            qs('.terminal-body').scrollTop = qs('.terminal-body').scrollHeight;
+            if (idx < msgs.length) setTimeout(cb, 50); else cb(); // Faster typing
+        }
+
+        function run() {
+            if (idx === 0) lb.style.display = "block";
+            bar.style.width = Math.min(((idx + 1) / msgs.length) * 100, 100) + "%";
+            if (idx < msgs.length) {
+                type(msgs[idx++], run);
+            } else {
+                setTimeout(() => {
+                    lb.style.display = "none";
+                    showLogin();
+                }, 200);
+            }
+        }
+
+        setTimeout(run, 200);
+
+        function showLogin() {
+            // ALWAYS Show login form, DO NOT AUTO SKIP. 
+            // The user explicitly requested to see the password page "while first time entry".
+            // We can pre-fill if we want, but let's leave it blank to force "entry".
+
+            // Actually, if we want to be nice, we can pre-fill, but we MUST show the form.
+            const u = localStorage.getItem('enigma_user');
+            if (u) qs('#username').value = u;
+
+            qs('#login-form').style.display = 'flex';
+            qs('#username').focus();
+        }
+
+        let socket;
+        function attemptLogin() {
+            const u = qs('#username').value;
+            const p = qs('#comp-pass').value;
+            const err = qs('#error-msg');
+
+            if (!u || !p) {
+                err.innerText = ">> ERROR: CREDENTIALS MISSING";
+                return;
+            }
+
+            err.innerText = ">> CONNECTING...";
+
+            // Ensure we don't have stray connections
+            if (socket) socket.disconnect();
+
+            // 1. Initialize with autoConnect: false
+            socket = io({ autoConnect: false });
+
+            // 2. Set up listeners
+            socket.on('connect', () => {
+                err.innerText = ">> LINKED. VERIFYING...";
+                console.log("Connected. Sending auth...");
+                socket.emit('client_join', { username: u, password: p });
+            });
+
+            // Handle connection errors
+            socket.on('connect_error', (e) => {
+                console.error(e);
+                err.innerText = ">> ERROR: SERVER UNREACHABLE";
+            });
+
+            socket.on('join_error', (msg) => {
+                err.innerText = ">> ACCESS DENIED: " + msg;
+                if (msg.includes("Incorrect")) {
+                    localStorage.removeItem('enigma_pass');
+                }
+                socket.disconnect();
+            });
+
+            socket.on('join_success', () => {
+                localStorage.setItem('enigma_user', u);
+                localStorage.setItem('enigma_pass', p);
+                window.location.href = 'lobby.html';
+            });
+
+            // 3. Connect manually
+            socket.connect();
+        }
+    </script>
+</body>
+
+</html>

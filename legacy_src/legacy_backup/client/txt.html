@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENIGMA | Terminal Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0a;
+            --term-green: #33ff00;
+            --term-glow: #33ff00aa;
+            --term-white: #e0e0e0;
+            --term-dim: #444;
+            --font-stack: 'Share Tech Mono', 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            scrollbar-width: thin;
+            scrollbar-color: var(--term-green) var(--bg-color);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--term-green);
+            font-family: var(--font-stack);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom,
+                    rgba(255, 255, 255, 0),
+                    rgba(255, 255, 255, 0) 50%,
+                    rgba(0, 0, 0, 0.1) 50%,
+                    rgba(0, 0, 0, 0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .crt-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 11;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 0.97;
+            }
+
+            5% {
+                opacity: 0.95;
+            }
+
+            10% {
+                opacity: 0.9;
+            }
+
+            20% {
+                opacity: 0.98;
+            }
+
+            60% {
+                opacity: 0.9;
+            }
+
+            100% {
+                opacity: 0.94;
+            }
+        }
+
+        /* Container */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            padding-bottom: 1rem;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3rem;
+            text-shadow: 0 0 10px var(--term-glow);
+            margin-bottom: 0.5rem;
+        }
+
+        .marquee-container {
+            width: 100%;
+            overflow: hidden;
+            border-bottom: 2px solid var(--term-dim);
+            border-top: 1px solid var(--term-dim);
+            padding: 0.5rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+            background: rgba(0, 5, 0, 0.9);
+            box-shadow: inset 0 0 15px #000;
+        }
+
+        .marquee-track {
+            display: flex;
+            gap: 4rem;
+            width: max-content;
+            animation: marquee 30s linear infinite;
+        }
+
+        .marquee-item {
+            color: var(--term-white);
+            font-size: 1rem;
+            letter-spacing: 0.1rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            white-space: nowrap;
+        }
+
+        .warning-symbol {
+            color: var(--term-green);
+            font-size: 1.2rem;
+            text-shadow: 0 0 8px var(--term-green);
+            animation: blink-warning 2s infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        @keyframes blink-warning {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* Main Layout */
+        main {
+            display: flex;
+            flex: 1;
+            gap: 2rem;
+            overflow: hidden;
+        }
+
+        .panel {
+            flex: 1;
+            border: 1px solid var(--term-green);
+            background: rgba(0, 20, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 15px rgba(51, 255, 0, 0.1);
+            backdrop-filter: blur(2px);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            box-shadow: 0 0 20px rgba(51, 255, 0, 0.2);
+            border-color: #55ff55;
+        }
+
+        .panel-header {
+            background-color: var(--term-green);
+            color: black;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .panel-content {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        /* Right Panel - Input */
+        .input-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: var(--term-green);
+            font-family: var(--font-stack);
+            font-size: 1.1rem;
+            resize: none;
+            outline: none;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        textarea::placeholder {
+            color: rgba(51, 255, 0, 0.3);
+        }
+
+        /* Nav Controls */
+        .action-area {
+            padding: 1rem;
+            border-top: 1px solid var(--term-dim);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .nav-btns {
+            display: flex;
+            gap: 5px;
+            flex: 1;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 0.8rem;
+            background: transparent;
+            color: var(--term-green);
+            border: 1px solid var(--term-green);
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(51, 255, 0, 0.2);
+        }
+
+        .nav-btn.active {
+            background: var(--term-green);
+            color: black;
+            font-weight: bold;
+            box-shadow: 0 0 10px var(--term-glow);
+        }
+
+        .submit-btn {
+            background: transparent;
+            color: var(--term-green);
+            border: 1px solid var(--term-green);
+            padding: 0.8rem 2rem;
+            font-family: var(--font-stack);
+            font-size: 1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            background: var(--term-green);
+            color: black;
+            box-shadow: 0 0 15px var(--term-glow);
+        }
+
+        /* Scoring Info */
+        .score-display {
+            font-size: 0.9rem;
+            color: var(--term-white);
+            margin-bottom: 0.5rem;
+            text-align: right;
+            border-bottom: 1px solid var(--term-dim);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+
+            main {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .panel {
+                height: 50vh;
+                min-height: 300px;
+                flex: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="crt-overlay"></div>
+
+    <div class="app-container">
+        <header>
+            <h1>Enigma</h1>
+        </header>
+
+        <div class="marquee-container">
+            <div class="marquee-track">
+                <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+                <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+                <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+                <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+                <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+                <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+                <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+                <div class="marquee-item"><span class="warning-symbol">⚠</span> WARNING: TROJANS</div>
+            </div>
+        </div>
+
+        <main>
+            <!-- Left Panel: Question -->
+            <section class="panel">
+                <div class="panel-header">
+                    <span>> DECRYPT_SEQUENCE</span>
+                    <span id="q-indicator">SEQUENCE_1</span>
+                </div>
+                <div class="panel-content">
+                    <div id="dynamic-q-text" style="white-space: pre-wrap; color: var(--term-white);">Loading
+                        Question...</div>
+                    <div id="ai-feedback"
+                        style="margin-top:2rem; padding: 1rem; border: 1px dashed var(--term-dim); display: none;">
+                        <strong style="color:var(--term-green)">> ANALYSIS_REPORT:</strong><br>
+                        <span id="feedback-text" style="color:#aaa"></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Panel: Input -->
+            <section class="panel input-panel">
+                <div class="panel-header">
+                    <span>> COMMAND_INPUT</span>
+                    <span id="round-timer" style="color:#0f0; text-shadow: 0 0 5px #0f0; font-weight: bold;"></span>
+                </div>
+                <div class="panel-content" style="display: flex; flex-direction: column;">
+                    <div class="score-display" id="score-info">
+                        ATTEMPT_SCORE: 0 | BEST_SCORE: 0
+                    </div>
+                    <textarea id="current-input" placeholder="> Enter decryption key..." spellcheck="false"></textarea>
+                </div>
+                <div class="action-area">
+                    <div class="nav-controls">
+                        <div class="nav-btns">
+                            <button class="nav-btn active" onclick="navTo(1)">Q1</button>
+                            <button class="nav-btn" onclick="navTo(2)">Q2</button>
+                            <button class="nav-btn" onclick="navTo(3)">Q3</button>
+                        </div>
+                        <button class="submit-btn" onclick="submitCurrentQ()">SUBMIT_DATA</button>
+                    </div>
+                    <div id="status-line" style="text-align: right; color: var(--term-dim); font-size: 0.8rem;">READY
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const user = localStorage.getItem('enigma_user');
+        const pass = localStorage.getItem('enigma_pass');
+        let socket;
+        let timerInterval;
+        let endTime = null;
+
+        // State
+        let currentQ = 1;
+        let config = { q1: "No Data", q2: "No Data", q3: "No Data" };
+        let answers = { 1: "", 2: "", 3: "" };
+        let scores = { 1: { current: 0, best: 0 }, 2: { current: 0, best: 0 }, 3: { current: 0, best: 0 } };
+
+        if (!user || !pass) {
+            window.location.href = 'lobby.html';
+        } else {
+            socket = io({ autoConnect: false });
+
+            socket.on('connect', () => {
+                socket.emit('client_join', { username: user, password: pass });
+            });
+
+            socket.on('round_update', (rounds) => {
+                if (rounds.round2) window.location.href = 'img.html';
+                else if (!rounds.round1) window.location.href = 'lobby.html';
+            });
+
+            socket.on('text_round_config', (newConfig) => {
+                if (newConfig) {
+                    config = newConfig;
+                    loadQ(currentQ);
+                }
+            });
+
+            // Handle Batch/Single Score Results
+            socket.on('batch_score_processed', (results) => {
+                // results map: { q1: { score, reason, bestScore, saved } }
+
+                // If we get results, update our local state
+                for (let qidStr of Object.keys(results)) {
+                    // qidStr might be "q1" or "1"? server sends keys as "q1" if it mapped from answers keys
+                    // wait, client sends { "1": val }, server loops Object.entries(answers).
+                    // So keys in results will be "1".
+
+                    const res = results[qidStr];
+                    const qId = parseInt(qidStr); // ensure int
+
+                    if (scores[qId]) {
+                        scores[qId].current = res.score;
+                        scores[qId].best = res.bestScore;
+                    }
+
+                    // Show feedback if this result is for the current question
+                    if (qId === currentQ) {
+                        updateScoreDisplay();
+                        showFeedback(res.score, res.reason);
+
+                        const btn = document.querySelector('.submit-btn');
+                        btn.innerText = "DATA_UPDATED";
+                        setTimeout(() => btn.innerText = "SUBMIT_DATA", 2000);
+                    }
+                }
+            });
+
+            socket.on('timer_sync', (data) => {
+                if (data && data.endTime) {
+                    endTime = data.endTime;
+                    startTimer();
+                }
+            });
+
+            socket.on('admin_warning', (msg) => {
+                const marqueeTrack = document.querySelector('.marquee-track');
+                if (marqueeTrack) {
+                    const warningItem = `<div class="marquee-item"><span class="warning-symbol">⚠</span> ${msg}</div>`;
+                    marqueeTrack.innerHTML = warningItem.repeat(12);
+                }
+            });
+
+            socket.connect();
+        }
+
+        // View Logic
+        const textInput = document.getElementById('current-input');
+
+        textInput.addEventListener('input', (e) => {
+            answers[currentQ] = e.target.value;
+        });
+
+        function navTo(qNum) {
+            // Save current input to state just in case (already done by change listener, but good practice)
+            answers[currentQ] = textInput.value;
+
+            // Switch
+            currentQ = qNum;
+            loadQ(currentQ);
+        }
+
+        function loadQ(qNum) {
+            // Update Text
+            const qKey = 'q' + qNum;
+            const text = config[qKey] || "WAITING_FOR_DATA...";
+
+            // Typewriter effect or instant? Instant is better for switching to avoid annoyance
+            document.getElementById('dynamic-q-text').innerText = text;
+            document.getElementById('q-indicator').innerText = `SEQUENCE_${qNum}`;
+
+            // Restore Input
+            textInput.value = answers[qNum] || "";
+
+            // Update Buttons
+            document.querySelectorAll('.nav-btn').forEach((btn, idx) => {
+                if (idx + 1 === qNum) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+
+            // Update Score Info
+            updateScoreDisplay();
+
+            // Hide feedback initially when switching (or maybe preserve it if we had it?)
+            // Let's clear feedback to avoid confusion
+            document.getElementById('ai-feedback').style.display = 'none';
+        }
+
+        function updateScoreDisplay() {
+            const s = scores[currentQ];
+            document.getElementById('score-info').innerText =
+                `LATEST_ATTEMPT: ${s.current}% | HIGH_SCORE: ${s.best}%`;
+        }
+
+        function showFeedback(score, reason) {
+            const fbBox = document.getElementById('ai-feedback');
+            const fbText = document.getElementById('feedback-text');
+            fbBox.style.display = 'block';
+            fbText.innerText = `SCORE: ${score}%\nDETAILS: ${reason}`;
+        }
+
+        function submitCurrentQ() {
+            const val = answers[currentQ];
+            if (!val || val.trim().length === 0) {
+                alert("INPUT_EMPTY");
+                return;
+            }
+
+            const payload = {};
+            payload[currentQ] = val; // { "1": "answer" }
+
+            const btn = document.querySelector('.submit-btn');
+            btn.innerText = "TRANSMITTING...";
+
+            socket.emit('submit_text_batch', { answers: payload });
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            const display = document.getElementById('round-timer');
+
+            function update() {
+                if (!endTime) return;
+                const now = Date.now();
+                const diff = endTime - now;
+
+                if (diff <= 0) {
+                    display.innerText = "TIME_EXPIRED";
+                    display.style.color = "red";
+                    clearInterval(timerInterval);
+                    return;
+                }
+
+                const m = Math.floor(diff / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                display.innerText = `T-MINUS: ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            }
+
+            update();
+            timerInterval = setInterval(update, 1000);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENIGMA Admin Terminal</title>
+    <style>
+        :root {
+            --term-green: #0f0;
+            --term-bg: #000;
+            --term-dim: #003300;
+        }
+
+        body {
+            background-color: var(--term-bg);
+            color: var(--term-green);
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        #login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-box {
+            border: 2px solid var(--term-green);
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 20px var(--term-green);
+        }
+
+        input {
+            background: #000;
+            border: 1px solid var(--term-green);
+            color: var(--term-green);
+            padding: 10px;
+            font-family: inherit;
+            margin: 10px 0;
+            width: 200px;
+        }
+
+        button {
+            background: var(--term-green);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            background: #fff;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            border: 1px solid var(--term-green);
+            padding: 20px;
+            margin-bottom: 20px;
+            background: rgba(0, 20, 0, 0.8);
+        }
+
+        h2 {
+            border-bottom: 1px solid var(--term-green);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        .switch-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .switch-card {
+            border: 1px solid var(--term-dim);
+            padding: 15px;
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .settings-icon {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--term-green);
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+
+        .settings-icon:hover {
+            opacity: 1;
+            text-shadow: 0 0 8px var(--term-green);
+        }
+
+        .switch-card.active {
+            border-color: var(--term-green);
+            box-shadow: 0 0 10px var(--term-green);
+        }
+
+        .toggle-btn {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .user-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--term-dim);
+            padding: 5px 0;
+        }
+
+        .user-actions button {
+            padding: 2px 5px;
+            font-size: 0.8em;
+            margin-left: 5px;
+            background: #300;
+            color: #f00;
+            border: 1px solid #f00;
+        }
+
+        .user-actions button.warn {
+            background: #330;
+            color: #ff0;
+            border: 1px solid #ff0;
+        }
+
+        .leaderboard-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+
+        /* CRT Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="login-overlay">
+        <div class="login-box">
+            <h1>ACCESS CONTROL</h1>
+            <input type="text" id="admin-user" placeholder="USERNAME"><br>
+            <input type="password" id="admin-pass" placeholder="PASSWORD"><br>
+            <button onclick="adminLogin()">AUTHENTICATE</button>
+            <p id="login-msg" style="color:red"></p>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL ROUND 1 -->
+    <div id="settings-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center;">
+        <div class="panel" style="width: 800px; max-width:90%; border: 2px solid var(--term-green); background: #000;">
+            <div
+                style="display:flex; justify-content:space-between; margin-bottom: 20px; border-bottom: 1px solid var(--term-green); padding-bottom:10px;">
+                <h2 style="border:none; margin:0;">ROUND 1 CONFIG</h2>
+                <button onclick="closeSettings()" style="padding: 5px 10px;">X</button>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap: 15px;">
+                <div>
+                    <label>QUESTION 1 (Paragraph):</label>
+                    <textarea id="set-q1" rows="3"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                    <label>ANSWER 1:</label>
+                    <textarea id="set-q1-ans" rows="3"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                </div>
+                <div>
+                    <label>QUESTION 2 (Paragraph):</label>
+                    <textarea id="set-q2" rows="3"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                    <label>ANSWER 2:</label>
+                    <textarea id="set-q2-ans" rows="3"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                </div>
+                <div>
+                    <label>QUESTION 3 (Paragraph):</label>
+                    <textarea id="set-q3" rows="3"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                    <label>ANSWER 3:</label>
+                    <textarea id="set-q3-ans" rows="3"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                </div>
+                <!-- TIMER -->
+                <div style="border-top: 1px solid #0f0; padding-top: 10px;">
+                    <label>ROUND TIMER (MINUTES):</label>
+                    <input type="number" id="set-q-timer" placeholder="0 = NO TIMER" style="width: 150px;">
+                </div>
+                <button onclick="saveTextRoundConfig()">UPLOAD CONFIGURATION</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL ROUND 2 (IMG) -->
+    <div id="settings-modal-r2"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center;">
+        <div class="panel" style="width: 800px; max-width:90%; border: 2px solid var(--term-green); background: #000;">
+            <div
+                style="display:flex; justify-content:space-between; margin-bottom: 20px; border-bottom: 1px solid var(--term-green); padding-bottom:10px;">
+                <h2 style="border:none; margin:0;">ROUND 2 CONFIG (IMAGES)</h2>
+                <button onclick="closeSettings()" style="padding: 5px 10px;">X</button>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap: 15px;">
+                <!-- Q1 -->
+                <div>
+                    <label>IMAGE 1 URL:</label>
+                    <input type="text" id="set-r2-q1-img" style="width:100%;">
+                    <label>CORRECT PROMPT 1:</label>
+                    <textarea id="set-r2-q1-ans" rows="2"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                </div>
+                <!-- Q2 -->
+                <div>
+                    <label>IMAGE 2 URL:</label>
+                    <input type="text" id="set-r2-q2-img" style="width:100%;">
+                    <label>CORRECT PROMPT 2:</label>
+                    <textarea id="set-r2-q2-ans" rows="2"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                </div>
+                <!-- Q3 -->
+                <div>
+                    <label>IMAGE 3 URL:</label>
+                    <input type="text" id="set-r2-q3-img" style="width:100%;">
+                    <label>CORRECT PROMPT 3:</label>
+                    <textarea id="set-r2-q3-ans" rows="2"
+                        style="width:100%; background:#111; color:#0f0; border:1px solid #0f0;"></textarea>
+                </div>
+                <!-- TIMER -->
+                <div style="border-top: 1px solid #0f0; padding-top: 10px;">
+                    <label>ROUND TIMER (MINUTES):</label>
+                    <input type="number" id="set-r2-timer" placeholder="0 = NO TIMER" style="width: 150px;">
+                </div>
+                <button onclick="saveImgRoundConfig()">UPLOAD R2 CONFIG</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="display:none;" id="dashboard">
+        <div class="main-col">
+            <div class="panel">
+                <h2>ROUND CONTROL</h2>
+                <div class="switch-group">
+                    <div class="switch-card" id="card-lobby">
+
+                        <h3>LOBBY</h3>
+                        <div id="status-lobby">OFF</div>
+                        <button class="toggle-btn" onclick="toggleRound('lobby')">PUSH</button>
+                    </div>
+                    <div class="switch-card" id="card-round1">
+                        <div class="settings-icon" onclick="openRoundSettings('round1')">⚙</div>
+                        <h3>ROUND 1 (TEXT)</h3>
+                        <div id="status-round1">OFF</div>
+                        <button class="toggle-btn" onclick="toggleRound('round1')">PUSH</button>
+                    </div>
+                    <div class="switch-card" id="card-round2">
+                        <div class="settings-icon" onclick="openRoundSettings('round2')">⚙</div>
+                        <h3>ROUND 2 (IMG)</h3>
+                        <div id="status-round2">OFF</div>
+                        <button class="toggle-btn" onclick="toggleRound('round2')">PUSH</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>LIVE MONITORING</h2>
+                <p>CONNECTED CLIENTS: <span id="client-count">0</span></p>
+                <div id="client-list">
+                    <!-- User rows injected here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="side-col">
+            <div class="panel">
+                <h2>BROADCAST SYSTEM</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="warn-all-msg" placeholder="SYSTEM WARNING MESSAGE" style="flex: 1;">
+                    <button onclick="warnAll()" style="color:#ff0; border-color:#ff0; flex-shrink: 0;">WARN ALL</button>
+                </div>
+                <div style="font-size:0.8em; color:#888;">* Updates client scrolling marquee immediately.</div>
+            </div>
+
+            <div class="panel">
+                <h2>COMPETITION SETTINGS</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="password" id="global-pass" placeholder="NEW CLIENT PASSWORD" style="width: 100%;">
+                    <button onclick="updateGlobalPass()">UPDATE</button>
+                </div>
+                <div id="pass-msg" style="color: #0f0;"></div>
+            </div>
+
+            <div class="panel">
+                <h2>MANAGE ADMINS</h2>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="new-admin-user" placeholder="USERNAME" style="flex: 1;">
+                    <input type="password" id="new-admin-pass" placeholder="PASSWORD" style="flex: 1;">
+                    <button onclick="createAdmin()" style="flex-shrink: 0;">ADD</button>
+                </div>
+                <div id="admin-msg" style="color: #0f0;"></div>
+            </div>
+
+            <div class="panel">
+                <h2>LEADERBOARD</h2>
+                <div id="leaderboard-list">
+                    <!-- Scores injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket;
+
+        async function adminLogin() {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+
+            try {
+                const res = await fetch('/api/auth/admin-login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.setItem('admin_user', u);
+                    localStorage.setItem('admin_pass', p); // Store for stateless auth
+                    document.getElementById('login-overlay').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'grid';
+                    initSocket();
+                } else {
+                    document.getElementById('login-msg').innerText = data.message;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function initSocket() {
+            if (socket) {
+                socket.removeAllListeners();
+                socket.disconnect();
+            }
+
+            // Fix Race Condition: Don't connect immediately
+            socket = io({ autoConnect: false });
+
+            let joinInterval;
+
+            socket.on('connect', () => {
+                console.log("Admin Connected", socket.id);
+                document.getElementById('client-count').innerText = "CONNECTING...";
+
+                // Retry joining until ACK
+                socket.emit('admin_join');
+                clearInterval(joinInterval);
+                joinInterval = setInterval(() => {
+                    if (document.getElementById('client-count').innerText !== "READY") {
+                        console.log("Retrying admin_join...");
+                        socket.emit('admin_join');
+                    }
+                }, 1000);
+            });
+
+            socket.on('admin_ack', () => {
+                clearInterval(joinInterval);
+                console.log("Admin Access Confirmed");
+                if (document.getElementById('client-count').innerText === "CONNECTING...") {
+                    document.getElementById('client-count').innerText = "WAITING...";
+                }
+            });
+
+            socket.connect();
+
+            socket.on('round_update', (rounds) => {
+                updateSwitch('lobby', rounds.lobby);
+                updateSwitch('round1', rounds.round1);
+                updateSwitch('round2', rounds.round2);
+            });
+
+            socket.on('text_round_config', (config) => {
+                document.getElementById('set-q1').value = config.q1 || "";
+                document.getElementById('set-q1-ans').value = config.q1Ans || "";
+                document.getElementById('set-q2').value = config.q2 || "";
+                document.getElementById('set-q2-ans').value = config.q2Ans || "";
+                document.getElementById('set-q3').value = config.q3 || "";
+                document.getElementById('set-q3-ans').value = config.q3Ans || "";
+                document.getElementById('set-q-timer').value = config.timerDuration || 0;
+            });
+
+            socket.on('img_round_config', (config) => {
+                if (!config) return;
+                document.getElementById('set-r2-q1-img').value = config.q1Img || "";
+                document.getElementById('set-r2-q1-ans').value = config.q1Ans || "";
+                document.getElementById('set-r2-q2-img').value = config.q2Img || "";
+                document.getElementById('set-r2-q2-ans').value = config.q2Ans || "";
+                document.getElementById('set-r2-q3-img').value = config.q3Img || "";
+                document.getElementById('set-r2-q3-img').value = config.q3Img || "";
+                document.getElementById('set-r2-q3-ans').value = config.q3Ans || "";
+                document.getElementById('set-r2-timer').value = config.timerDuration || 0;
+            });
+
+            socket.on('dashboard_update', (data) => {
+                document.getElementById('client-count').innerText = data.connectedCount;
+                renderClients(data.clients);
+                renderLeaderboard(data.leaderboard);
+            });
+
+            socket.on('disconnect', () => {
+                console.log("Admin Disconnected");
+            });
+        }
+
+        // ... updateSwitch, toggleRound, renderClients, renderLeaderboard ...
+
+        function openRoundSettings(round) {
+            console.log(`Open settings for ${round}`);
+            if (round === 'round1') {
+                document.getElementById('settings-modal').style.display = 'flex';
+            } else if (round === 'round2') {
+                document.getElementById('settings-modal-r2').style.display = 'flex';
+            }
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+            document.getElementById('settings-modal-r2').style.display = 'none';
+        }
+
+        function saveImgRoundConfig() {
+            const q1Img = document.getElementById('set-r2-q1-img').value;
+            const q1Ans = document.getElementById('set-r2-q1-ans').value;
+            const q2Img = document.getElementById('set-r2-q2-img').value;
+            const q2Ans = document.getElementById('set-r2-q2-ans').value;
+            const q3Img = document.getElementById('set-r2-q3-img').value;
+            const q3Ans = document.getElementById('set-r2-q3-ans').value;
+            const timerDuration = document.getElementById('set-r2-timer').value;
+            const password = localStorage.getItem('admin_pass');
+
+            socket.emit('update_img_round', { q1Img, q1Ans, q2Img, q2Ans, q3Img, q3Ans, timerDuration, password });
+
+            const btn = document.querySelector('#settings-modal-r2 button:last-child');
+            const originalText = btn.innerText;
+            btn.innerText = "UPLOADED!";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                closeSettings();
+            }, 1000);
+        }
+
+        function updateSwitch(name, active) {
+            const card = document.getElementById('card-' + name);
+            const status = document.getElementById('status-' + name);
+            if (active) {
+                card.classList.add('active');
+                status.innerText = 'ONLINE';
+                status.style.color = '#0f0';
+            } else {
+                card.classList.remove('active');
+                status.innerText = 'OFFLINE';
+                status.style.color = '#555';
+            }
+        }
+
+        function toggleRound(round) {
+            const password = localStorage.getItem('admin_pass');
+            const current = document.getElementById('card-' + round).classList.contains('active');
+            socket.emit('toggle_round', { round, status: !current, password });
+        }
+
+        function renderClients(clients) {
+            console.log("Rendering Clients:", clients);
+            const container = document.getElementById('client-list');
+            container.innerHTML = '';
+            if (!clients || clients.length === 0) {
+                container.innerHTML = '<p>NO ACTIVE SIGNALS</p>';
+                return;
+            }
+            const activeClients = clients.filter(c => c.socketId); // Filter offline users
+            if (!activeClients || activeClients.length === 0) {
+                container.innerHTML = '<p>NO ACTIVE SIGNALS</p>';
+                return;
+            }
+            activeClients.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'user-row';
+                div.innerHTML = `
+                <span>${c.username} [${c.ipAddress || 'unknown'}] (${c.socketId ? 'ON' : 'OFF'})</span>
+                <div class="user-actions">
+                    <button class="warn" onclick="warnUser('${c.username}')">WARN</button>
+                    <button onclick="kickUser('${c.username}')">KICK</button>
+                    <button style="border:1px solid #00f; color:#00f; background:#001;" onclick="resetUserScore('${c.username}')">RESET</button>
+                </div>
+            `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderLeaderboard(lb) {
+            const container = document.getElementById('leaderboard-list');
+            container.innerHTML = `
+            <div class="leaderboard-row" style="font-weight:bold; border-bottom:1px solid #0f0; font-size: 0.8em; text-align:center;">
+                <span style="flex:3; text-align:left;">USER</span> 
+                
+                <span style="flex:1; color:#888;">Q1</span> 
+                <span style="flex:1; color:#888;">Q2</span> 
+                <span style="flex:1; color:#888;">Q3</span> 
+                <span style="flex:1.5; color:#0ff; border-right:1px solid #333;">R1</span> 
+                
+                <span style="flex:1; color:#888;">I1</span> 
+                <span style="flex:1; color:#888;">I2</span> 
+                <span style="flex:1; color:#888;">I3</span> 
+                <span style="flex:1.5; color:#0f0; border-right:1px solid #333;">R2</span> 
+                
+                <span style="flex:1.5; color:#ff0;">TOT</span>
+                <span style="flex:0.5; color:#f00;">DEL</span>
+            </div>
+        `;
+            lb.forEach(u => {
+                const qs = u.questionScores || {};
+                const is = u.imgScores || {};
+                const div = document.createElement('div');
+                div.className = 'leaderboard-row';
+                div.style.fontSize = "0.8em";
+                div.style.textAlign = "center";
+                div.innerHTML = `
+                <span style="flex:3; text-align:left;">${u.username}</span>
+                
+                <span style="flex:1; color:#aaa;">${qs.q1 || 0}</span>
+                <span style="flex:1; color:#aaa;">${qs.q2 || 0}</span>
+                <span style="flex:1; color:#aaa;">${qs.q3 || 0}</span>
+                <span style="flex:1.5; color:#0ff; font-weight:bold; border-right:1px solid #333;">${u.scores.round1 || 0}</span>
+                
+                <span style="flex:1; color:#aaa;">${is[1] || 0}</span>
+                <span style="flex:1; color:#aaa;">${is[2] || 0}</span>
+                <span style="flex:1; color:#aaa;">${is[3] || 0}</span>
+                <span style="flex:1.5; color:#0f0; font-weight:bold; border-right:1px solid #333;">${u.scores.round2 || 0}</span>
+                
+                <span style="flex:1.5; color:#ff0; font-weight:bold;">${u.totalScore || 0}</span>
+                <span style="flex:0.5;"><button style="background:#500; color:#fff; border:none; cursor:pointer;" onclick="kickUser('${u.username}')">X</button></span>
+            `;
+                container.appendChild(div);
+            });
+        }
+
+        async function updateGlobalPass() {
+            const p = document.getElementById('global-pass').value;
+            if (!p) return;
+
+            try {
+                const res = await fetch('/api/admin/set-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: p })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('pass-msg').innerText = "PASSWORD UPDATED";
+                    document.getElementById('global-pass').value = '';
+                    setTimeout(() => document.getElementById('pass-msg').innerText = '', 3000);
+                } else {
+                    document.getElementById('pass-msg').innerText = "ERROR: " + data.message || data.error;
+                    document.getElementById('pass-msg').style.color = 'red';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function createAdmin() {
+            const u = document.getElementById('new-admin-user').value;
+            const p = document.getElementById('new-admin-pass').value;
+            try {
+                const res = await fetch('/api/admin/add-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: u, password: p })
+                });
+                const data = await res.json();
+                const msg = document.getElementById('admin-msg');
+                if (data.success) {
+                    msg.innerText = "SUCCESS: Admin Created";
+                    msg.style.color = "#0f0";
+                    document.getElementById('new-admin-user').value = '';
+                    document.getElementById('new-admin-pass').value = '';
+                    setTimeout(() => msg.innerText = '', 3000);
+                } else {
+                    msg.innerText = "ERROR: " + data.message;
+                    msg.style.color = "red";
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function kickUser(username) {
+            if (confirm(`Kick ${username}?`)) {
+                const password = localStorage.getItem('admin_pass');
+                socket.emit('kick_user', { username, password });
+            }
+        }
+
+        function warnUser(username) {
+            const msg = prompt("Warning Message:");
+            if (msg) {
+                const password = localStorage.getItem('admin_pass');
+                socket.emit('warn_user', { username, message: msg, password });
+            }
+        }
+
+        function warnAll() {
+            const msg = document.getElementById('warn-all-msg').value;
+            if (!msg) return alert("Enter a message");
+            if (confirm(`BROADCAST WARNING: "${msg}" to ALL users?`)) {
+                const password = localStorage.getItem('admin_pass');
+                socket.emit('warn_all', { message: msg, password });
+                document.getElementById('warn-all-msg').value = '';
+            }
+        }
+
+        function resetUserScore(username) {
+            if (confirm(`RESET scores for ${username} to 0?`)) {
+                const password = localStorage.getItem('admin_pass');
+                socket.emit('reset_user_score', { username, password });
+            }
+        }
+
+
+
+        function saveTextRoundConfig() {
+            const q1 = document.getElementById('set-q1').value;
+            const q1Ans = document.getElementById('set-q1-ans').value;
+            const q2 = document.getElementById('set-q2').value;
+            const q2Ans = document.getElementById('set-q2-ans').value;
+            const q3 = document.getElementById('set-q3').value;
+            const q3Ans = document.getElementById('set-q3-ans').value;
+            const timerDuration = document.getElementById('set-q-timer').value;
+            const password = localStorage.getItem('admin_pass');
+
+            socket.emit('update_text_round', { q1, q1Ans, q2, q2Ans, q3, q3Ans, timerDuration, password });
+
+            // Visual feedback
+            const btn = document.querySelector('#settings-modal button:last-child');
+            const originalText = btn.innerText;
+            btn.innerText = "UPLOADED!";
+            setTimeout(() => {
+                btn.innerText = originalText;
+                closeSettings();
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>
