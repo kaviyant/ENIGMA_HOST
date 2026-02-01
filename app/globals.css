@@ -277,8 +277,12 @@ body {
 .panel-content {
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
+  overflow-y: hidden;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Critical for nested flex scrolling */
 }
 
 .target-label {
@@ -324,7 +328,10 @@ body {
 .input-section {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  /* Changed from height: 100% to flex: 1 to fill available space gracefully */
+  min-height: 0;
+  /* Important for nested flex scroll */
 }
 
 .input-label {
@@ -1205,11 +1212,17 @@ body {
 
   .main-content {
     flex-direction: column;
+    overflow-y: auto;
+    /* Allow scrolling on mobile if content overflows */
   }
 
   .panel {
-    flex: 1 1 auto !important;
+    flex: 0 0 auto !important;
+    /* Don't force equal split, let content determine size or use default */
+    width: 100% !important;
     max-width: 100% !important;
+    min-height: 400px;
+    /* Ensure panels have height on mobile */
   }
 
   /* Mobile Sidebar Toggle logic */

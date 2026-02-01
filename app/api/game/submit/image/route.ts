@@ -99,37 +99,49 @@ export async function POST(req: Request) {
             }
 
             if (!client.imgAnswers) client.imgAnswers = {};
-            if (!client.imgScores) client.imgScores = {};
+            if (!client.imgScores) client.imgScores = { q1: 0, q2: 0, q3: 0 };
 
-            (client.imgAnswers as any)[qid] = val;
+            // Map "1" -> "q1" to match schema
+            const schemaKey = 'q' + qid;
 
-            const currentBest = (client.imgScores as any)[qid] || 0;
-            const finalScore = Math.max(currentBest, score);
-            (client.imgScores as any)[qid] = finalScore;
+            // Only update if it's a valid key
+            if (['q1', 'q2', 'q3'].includes(schemaKey)) {
+                (client.imgAnswers as any)[qid] = val; // Answers are stored as "1": "val" in map usually, checking schema... answers in schema is Object.
 
-            results[qid] = { score: finalScore, attemptScore: score, reason };
+                const currentBest = (client.imgScores as any)[schemaKey] || 0;
+                const finalScore = Math.max(currentBest, score);
+                (client.imgScores as any)[schemaKey] = finalScore;
+
+                results[qid] = { score: finalScore, attemptScore: score, reason };
+            }
 
             // Save after each question to ensure partial progress is persisted
             let sum = 0;
             if (client.imgScores) {
-                for (const key in client.imgScores) {
-                    sum += (client.imgScores as any)[key] || 0;
-                }
+                const s = client.imgScores as any;
+                sum = (s.q1 || 0) + (s.q2 || 0) + (s.q3 || 0);
             }
             client.scores.round2 = sum;
             client.totalScore = (client.scores.round1 || 0) + (client.scores.round2 || 0);
+
+            client.markModified('imgScores');
+            client.markModified('imgAnswers');
+            client.markModified('scores');
+
             await saveClientWithRetry(client);
         }
 
         // Final recalculation and save
         let sum = 0;
         if (client.imgScores) {
-            for (const key in client.imgScores) {
-                sum += (client.imgScores as any)[key] || 0;
-            }
+            const s = client.imgScores as any;
+            sum = (s.q1 || 0) + (s.q2 || 0) + (s.q3 || 0);
         }
         client.scores.round2 = sum;
         client.totalScore = (client.scores.round1 || 0) + (client.scores.round2 || 0);
+
+        client.markModified('imgScores');
+        client.markModified('scores');
 
         const saveSuccess = await saveClientWithRetry(client);
         if (!saveSuccess) {

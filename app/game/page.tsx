@@ -519,39 +519,46 @@ function ImageRoundView({ config, username, endTime }: any) {
             </div>
 
             {/* Main Content */}
-            <div className="main-content" style={{ gap: '20px' }}>
+            <div className="main-content">
                 {/* Left Panel: Target Image */}
-                <div className="panel image-panel">
+                <div className="panel">
                     <div className="panel-header">
                         <span>// TARGET_VISUAL</span>
                         <span className="panel-tag">[AI_GENERATED]</span>
                     </div>
-                    <div className="panel-content" style={{ padding: '0', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', position: 'relative', minHeight: '400px' }}>
-                            {/* Decorative corners */}
-                            <div style={{ position: 'absolute', top: '10px', left: '10px', width: '20px', height: '20px', borderTop: '2px solid #00ff66', borderLeft: '2px solid #00ff66', zIndex: 10 }}></div>
-                            <div style={{ position: 'absolute', top: '10px', right: '10px', width: '20px', height: '20px', borderTop: '2px solid #00ff66', borderRight: '2px solid #00ff66', zIndex: 10 }}></div>
-                            <div style={{ position: 'absolute', bottom: '10px', left: '10px', width: '20px', height: '20px', borderBottom: '2px solid #00ff66', borderLeft: '2px solid #00ff66', zIndex: 10 }}></div>
-                            <div style={{ position: 'absolute', bottom: '10px', right: '10px', width: '20px', height: '20px', borderBottom: '2px solid #00ff66', borderRight: '2px solid #00ff66', zIndex: 10 }}></div>
+                    <div className="panel-content">
+                        <div className="target-label">AI Generated Object</div>
+                        <div className="target-result" style={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {/* Decorative corners */}
+                                    <div style={{ position: 'absolute', top: '10px', left: '10px', width: '20px', height: '20px', borderTop: '2px solid #00ff66', borderLeft: '2px solid #00ff66', zIndex: 10 }}></div>
+                                    <div style={{ position: 'absolute', top: '10px', right: '10px', width: '20px', height: '20px', borderTop: '2px solid #00ff66', borderRight: '2px solid #00ff66', zIndex: 10 }}></div>
+                                    <div style={{ position: 'absolute', bottom: '10px', left: '10px', width: '20px', height: '20px', borderBottom: '2px solid #00ff66', borderLeft: '2px solid #00ff66', zIndex: 10 }}></div>
+                                    <div style={{ position: 'absolute', bottom: '10px', right: '10px', width: '20px', height: '20px', borderBottom: '2px solid #00ff66', borderRight: '2px solid #00ff66', zIndex: 10 }}></div>
 
-                            <img
-                                src={getImageSrc(currentQ)}
-                                alt="Target"
-                                className={`${glitch ? 'image-glitch' : ''}`}
-                                style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain' }}
-                            />
-                            {/* Scanning line overlay */}
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '2px', background: '#00ff66', opacity: 0.3, animation: 'scan 3s ease-in-out infinite', pointerEvents: 'none' }}></div>
-                        </div>
-                        <div style={{ padding: '12px 20px', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid #00ff66', display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#c0c0c0' }}>
-                            <span>RES: 1024x1024</span>
-                            <span>SOURCE: STABLE_DIFFUSION</span>
+                                    <img
+                                        src={getImageSrc(currentQ)}
+                                        alt="Target"
+                                        className={`${glitch ? 'image-glitch' : ''}`}
+                                        style={{ maxWidth: '75%', maxHeight: '75%', objectFit: 'contain' }}
+                                    />
+                                    {/* Scanning line overlay */}
+                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'hidden' }}>
+                                        <div style={{ width: '100%', height: '2px', background: '#00ff66', opacity: 0.3, animation: 'scan 3s ease-in-out infinite' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style={{ padding: '8px 15px', background: 'rgba(0,0,0,0.8)', borderTop: '1px solid #00ff66', display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#888' }}>
+                                <span>RES: 1024x1024</span>
+                                <span>SOURCE: STABLE_DIFFUSION</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Right Panel: Input */}
-                <div className="panel input-panel">
+                <div className="panel">
                     <div className="panel-header">
                         <span>// PROMPT_RECONSTRUCTION</span>
                         <span className="panel-tag">[YOUR_INPUT]</span>
@@ -591,7 +598,7 @@ function ImageRoundView({ config, username, endTime }: any) {
                             onClick={submit}
                             disabled={submitting}
                         >
-                            {submitting ? 'ANALYZING...' : 'INITIATE_ANALYSIS'}
+                            {submitting ? 'ANALYZING...' : 'TRANSMIT'}
                         </button>
                     </div>
                 </div>
@@ -602,20 +609,23 @@ function ImageRoundView({ config, username, endTime }: any) {
     )
 }
 
-function Countdown({ target, color }: { target: number, color: string }) {
-    const [left, setLeft] = useState(0);
+function Countdown({ target, color = '#00ff66' }: { target: string, color?: string }) {
+    const [remaining, setRemaining] = useState(0);
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            const now = Date.now();
-            const diff = target - now;
-            setLeft(Math.max(0, diff));
-        }, 1000);
-        return () => clearInterval(timer);
+        const update = () => {
+            const now = new Date().getTime();
+            const end = new Date(target).getTime();
+            const diff = Math.max(0, end - now);
+            setRemaining(diff);
+        };
+        update();
+        const interval = setInterval(update, 1000);
+        return () => clearInterval(interval);
     }, [target]);
 
-    const m = Math.floor(left / 60000);
-    const s = Math.floor((left % 60000) / 1000);
+    const m = Math.floor((remaining / 1000 / 60) % 60);
+    const s = Math.floor((remaining / 1000) % 60);
 
     return (
         <div className={`font-mono text-xl font-bold border-2 px-3 py-1 animate-pulse ${color === '#ff3333' ? 'text-red-500 border-red-500' : 'text-[#00ff66] border-[#00ff66]'}`}>
@@ -623,3 +633,21 @@ function Countdown({ target, color }: { target: number, color: string }) {
         </div>
     );
 }
+
+// Reuseable Notification Component
+function NotificationOverlay({ notification }: { notification: { message: string, type: 'success' | 'error' | 'info' } }) {
+    const colors = {
+        success: 'border-[#00ff66] text-[#00ff66] bg-[#001100]',
+        error: 'border-red-500 text-red-500 bg-[#110000]',
+        info: 'border-blue-400 text-blue-400 bg-[#000011]'
+    };
+
+    return (
+        <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-4 border-2 ${colors[notification.type]} shadow-[0_0_20px_rgba(0,0,0,0.8)] backdrop-blur-md min-w-[300px] text-center font-bold tracking-widest uppercase animate-in fade-in slide-in-from-top-4 duration-300`}>
+            <div className="text-xs opacity-70 mb-1">// SYSTEM_MESSAGE</div>
+            {notification.message}
+            <div className={`absolute bottom-0 left-0 h-1 bg-current opacity-50 animate-[shrink_3s_linear_forwards] w-full origin-left`}></div>
+        </div>
+    );
+}
+
