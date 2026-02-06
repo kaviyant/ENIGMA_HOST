@@ -313,6 +313,25 @@ body {
   border-left: 3px solid var(--term-green);
   margin-bottom: 20px;
   position: relative;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 530px;
+  max-height: 500px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--term-green) rgba(0, 0, 0, 0.3);
+}
+
+.target-result::-webkit-scrollbar {
+  width: 6px;
+}
+
+.target-result::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.target-result::-webkit-scrollbar-thumb {
+  background: var(--term-green);
+  border-radius: 3px;
 }
 
 .target-result::before {

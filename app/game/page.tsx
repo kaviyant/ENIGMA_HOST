@@ -528,9 +528,9 @@ function ImageRoundView({ config, username, endTime }: any) {
                     </div>
                     <div className="panel-content">
                         <div className="target-label">AI Generated Object</div>
-                        <div className="target-result" style={{ padding: 0, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div className="target-result" style={{ padding: 0, minHeight: '570px', maxHeight: '550px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', position: 'relative', overflow: 'hidden', minHeight: '400px', padding: 0 }}>
+                                <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
                                     {/* Decorative corners */}
                                     <div style={{ position: 'absolute', top: '10px', left: '10px', width: '20px', height: '20px', borderTop: '2px solid #00ff66', borderLeft: '2px solid #00ff66', zIndex: 10 }}></div>
                                     <div style={{ position: 'absolute', top: '10px', right: '10px', width: '20px', height: '20px', borderTop: '2px solid #00ff66', borderRight: '2px solid #00ff66', zIndex: 10 }}></div>
@@ -541,7 +541,7 @@ function ImageRoundView({ config, username, endTime }: any) {
                                         src={getImageSrc(currentQ)}
                                         alt="Target"
                                         className={`${glitch ? 'image-glitch' : ''}`}
-                                        style={{ maxWidth: '75%', maxHeight: '75%', objectFit: 'contain' }}
+                                        style={{ width: '100%', maxWidth: '100%', height: 'auto', objectFit: 'fill' }}
                                     />
                                     {/* Scanning line overlay */}
                                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', overflow: 'hidden' }}>

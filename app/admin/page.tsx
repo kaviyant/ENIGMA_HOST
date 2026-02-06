@@ -281,7 +281,7 @@ function Dashboard({ password, onLogout }: { password: string, onLogout: () => v
         <div className="app-container">
             {settingsModal === 'round1' && (
                 <div className="modal-overlay">
-                    <div className="panel" style={{ width: '800px', maxWidth: '90%', maxHeight: '90vh' }}>
+                    <div className="panel" style={{ width: '800px', maxWidth: '96%', maxHeight: '90vh' }}>
                         <div className="panel-header">
                             <span>ROUND 1 CONFIG [TEXT]</span>
                             <button onClick={() => setSettingsModal(null)} className="toggle-btn">CLOSE</button>
